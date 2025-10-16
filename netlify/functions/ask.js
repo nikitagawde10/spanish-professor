@@ -1,13 +1,11 @@
 import { ChatGroq } from "@langchain/groq";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { SYSTEM_RULES } from "./utils";
 
 const MODEL = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
 const API_KEY = process.env.GROQ_API_KEY;
 
-const SYSTEM = `You are a Spanish tutor for BEGINNERS who are native English speakers.
-Always explain in ENGLISH. Keep answers concise and structured with bullets/tables when useful.
-For single-word queries, include: meaning + part of speech; pronunciation; morphology; brief etymology; 2 short example sentences.
-End with a 1-line "Try it:" prompt.`;
+const SYSTEM = SYSTEM_RULES;
 
 // If it's a single word, request a full analysis
 function augmentQuestion(q) {
