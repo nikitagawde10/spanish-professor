@@ -14,3 +14,6 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+
+[build.environment]
+  NODE_VERSION = "20"
