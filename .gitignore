@@ -1,0 +1,34 @@
+# Node dependencies
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+frontend/dist/
+.netlify/
+.cache/
+out/
+build/
+
+# Environment variables
+.env
+.env.*
+!.env.example  # (optional: if you want to share a template)
+
+# Logs
+npm-debug.log*
+
+# Editor / OS junk files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.log
+
+# Local Netlify state
+.netlify/state.json
+
+# Miscellaneous
+*.zip
+*.tar.gz

@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "frontend/dist"
+  functions = "netlify/functions"
+
+# SPA fallback (prevents 404s when client-side routing is used)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# API to functions (optional if you call /.netlify/functions/ask directly)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

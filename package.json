@@ -1,0 +1,19 @@
+{
+  "name": "spanish-professor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "npm --prefix frontend run build"
+  },
+  "dependencies": {
+    "@langchain/community": "^0.3.7",
+    "@langchain/core": "^0.3.12",
+    "@langchain/groq": "^0.2.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.27.1"
+  }
+}
