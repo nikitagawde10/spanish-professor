@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "./app.css";
-
 export default function App() {
   // --- state ---
   const [query, setQuery] = useState("");
@@ -11,18 +10,24 @@ export default function App() {
   const [error, setError] = useState("");
 
   // --- theme (light / dark) ---
-  const prefersLight =
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-color-scheme: light)").matches;
-
   const [mode, setMode] = useState(() => {
-    const saved = localStorage.getItem("theme-mode");
-    return saved || (prefersLight ? "light" : "dark");
+    const saved =
+      typeof window !== "undefined" ? localStorage.getItem("theme-mode") : null;
+    if (saved) return saved;
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-color-scheme: light)").matches
+    ) {
+      return "light";
+    }
+    return "dark";
   });
 
   useEffect(() => {
-    localStorage.setItem("theme-mode", mode);
-    document.documentElement.setAttribute("data-theme", mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("theme-mode", mode);
+      document.documentElement.setAttribute("data-theme", mode);
+    }
   }, [mode]);
 
   // --- examples ---
@@ -76,9 +81,7 @@ export default function App() {
       {/* top bar */}
       <header className="topbar">
         <div className="brand">
-          <span className="logo" aria-hidden>
-            📘
-          </span>
+          <span className="logo">📘</span>
           <span className="brand-text">Spanish Professor</span>
         </div>
         <button
@@ -86,28 +89,28 @@ export default function App() {
           className="theme-toggle"
           onClick={() => setMode((m) => (m === "dark" ? "light" : "dark"))}
           aria-label="Toggle theme"
-          title="Toggle light/dark"
         >
-          {mode === "dark" ? "🌞" : "🌙"}
+          {mode === "dark" ? "☀️" : "🌙"}
         </button>
       </header>
 
       <main className="shell">
-        <h1 className="title">Learn Spanish the friendly way</h1>
-        <p className="subtitle">
-          Beginner Spanish explained in English. Ask about words, grammar, or
-          pronunciation.
-        </p>
+        <div className="hero">
+          <h1 className="title">Learn Spanish the friendly way</h1>
+          <p className="subtitle">
+            Beginner Spanish explained in English. Ask about words, grammar, or
+            pronunciation.
+          </p>
+        </div>
 
         {/* examples */}
-        <div className="chips-wrap" role="list">
+        <div className="chips-wrap">
           {examples.map((ex) => (
             <button
               key={ex}
               type="button"
               className="chip"
               onClick={() => setQuery(ex)}
-              role="listitem"
             >
               {ex}
             </button>
@@ -115,61 +118,71 @@ export default function App() {
         </div>
 
         {/* search */}
-        <form className="search" onSubmit={onSubmit}>
+        <div className="search-container">
           <div className="search-box">
-            <span className="search-icon" aria-hidden>
-              💬
-            </span>
+            <span className="search-icon">💬</span>
             <input
               type="text"
               placeholder='Ask something like: "What does guapo mean?"'
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              aria-label="Ask a Spanish question"
+              onKeyDown={(e) =>
+                e.key === "Enter" && !loading && query.trim() && onSubmit(e)
+              }
             />
           </div>
           <button
             className="ask-btn"
-            type="submit"
+            onClick={onSubmit}
             disabled={loading || !query.trim()}
           >
             {loading ? (
-              "Thinking…"
+              <>
+                <span className="spinner"></span>
+                Thinking…
+              </>
             ) : (
               <>
-                <span aria-hidden>✨</span> Ask
+                <span className="sparkle">✨</span> Ask
               </>
             )}
           </button>
-        </form>
+        </div>
 
         {/* error */}
         {error && (
-          <div className="alert error" role="alert">
-            ⚠️ {error}
+          <div className="alert error">
+            <span className="alert-icon">⚠️</span>
+            <div className="alert-content">
+              <strong>Error</strong>
+              <p>{error}</p>
+            </div>
           </div>
         )}
 
         {/* loading skeleton */}
         {loading && (
-          <div className="card">
-            <div className="sk sk-title" />
-            <div className="divider" />
-            <div className="sk sk-line" />
-            <div className="sk sk-line" />
-            <div className="sk sk-line short" />
+          <div className="card skeleton-card">
+            <div className="skeleton-header">
+              <div className="sk sk-badge"></div>
+              <div className="sk sk-title"></div>
+            </div>
+            <div className="divider"></div>
+            <div className="sk sk-line"></div>
+            <div className="sk sk-line"></div>
+            <div className="sk sk-line short"></div>
           </div>
         )}
 
         {/* answer */}
         {!loading && answer && (
           <section className="card">
-            <div className="card-head">
+            <div className="card-header">
               <div className="card-badge">📚</div>
               <h2>Answer</h2>
             </div>
-            <div className="divider" />
-            <div className="markdown-body answer">
+            <div className="divider"></div>
+            <div className="answer-content markdown-body answer">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {answer}
               </ReactMarkdown>
@@ -179,9 +192,12 @@ export default function App() {
 
         {/* empty state */}
         {!loading && !answer && !error && (
-          <p className="hint">
-            Type your question above or click an example to get started!
-          </p>
+          <div className="empty-state">
+            <div className="empty-icon">💭</div>
+            <p className="hint">
+              Type your question above or click an example to get started!
+            </p>
+          </div>
         )}
 
         <footer className="footer">
