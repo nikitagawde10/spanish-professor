@@ -1,63 +1,197 @@
+// netlify/functions/ask.js
 import { ChatGroq } from "@langchain/groq";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { z } from "zod";
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { createToolCallingAgent, AgentExecutor } from "langchain/agents";
 import { SYSTEM_RULES } from "./utils";
 
-const MODEL = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
+// --- env ---
 const API_KEY = process.env.GROQ_API_KEY;
-const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
+if (!API_KEY) {
+  throw new Error("Missing GROQ_API_KEY");
+}
 
+// --- tiny helper tools (optional) ---
+// Keep them simple and deterministic. The model decides when to call them.
+const numberToSpanishTool = new DynamicStructuredTool({
+  name: "number_to_spanish",
+  description:
+    "Convert an integer 0–9999 into Spanish words and return pieces for a small table.",
+  schema: z.object({ n: z.number().int().min(0).max(9999) }),
+  func: async ({ n }) => {
+    // Very small converter for demo; extend as needed.
+    const units = [
+      "cero",
+      "uno",
+      "dos",
+      "tres",
+      "cuatro",
+      "cinco",
+      "seis",
+      "siete",
+      "ocho",
+      "nueve",
+    ];
+    const tens = [
+      "",
+      "diez",
+      "veinte",
+      "treinta",
+      "cuarenta",
+      "cincuenta",
+      "sesenta",
+      "setenta",
+      "ochenta",
+      "noventa",
+    ];
+    const teens = {
+      11: "once",
+      12: "doce",
+      13: "trece",
+      14: "catorce",
+      15: "quince",
+      16: "dieciséis",
+      17: "diecisiete",
+      18: "dieciocho",
+      19: "diecinueve",
+    };
+    const hundreds = [
+      "",
+      "ciento",
+      "doscientos",
+      "trescientos",
+      "cuatrocientos",
+      "quinientos",
+      "seiscientos",
+      "setecientos",
+      "ochocientos",
+      "novecientos",
+    ];
+
+    if (n === 100)
+      return JSON.stringify({
+        spanish: "cien",
+        parts: [{ part: "cien", meaning: "one hundred" }],
+      });
+    if (n < 10)
+      return JSON.stringify({
+        spanish: units[n],
+        parts: [{ part: units[n], meaning: "unit" }],
+      });
+    if (n > 10 && n < 20)
+      return JSON.stringify({
+        spanish: teens[n],
+        parts: [{ part: teens[n], meaning: "11–19" }],
+      });
+
+    const parts = [];
+    let remaining = n;
+    let words = [];
+
+    // thousands
+    if (remaining >= 1000) {
+      const k = Math.floor(remaining / 1000);
+      words.push(k === 1 ? "mil" : `${units[k]} mil`);
+      parts.push({
+        part: k === 1 ? "mil" : `${units[k]} mil`,
+        meaning: "thousand",
+      });
+      remaining %= 1000;
+    }
+    // hundreds
+    if (remaining >= 100) {
+      const h = Math.floor(remaining / 100);
+      words.push(hundreds[h]);
+      parts.push({ part: hundreds[h], meaning: "hundreds" });
+      remaining %= 100;
+    }
+    // tens and units
+    if (remaining >= 20) {
+      const t = Math.floor(remaining / 10);
+      const u = remaining % 10;
+      if (t === 2 && u > 0) {
+        // veintiuno, veintidós...
+        const w =
+          u === 1
+            ? "veintiún"
+            : `veinti${u === 2 ? "dós" : u === 3 ? "trés" : units[u]}`;
+        words.push(w.replace("uno", "un"));
+        parts.push({ part: w, meaning: "twenties merged form" });
+      } else {
+        words.push(u ? `${tens[t]} y ${units[u]}` : tens[t]);
+        parts.push({ part: tens[t], meaning: "tens" });
+        if (u) parts.push({ part: units[u], meaning: "unit" });
+      }
+      remaining = 0;
+    } else if (remaining > 0) {
+      // 10, 11–19 already handled
+      words.push(remaining === 10 ? "diez" : units[remaining]);
+      parts.push({ part: words[words.length - 1], meaning: "unit/ten" });
+      remaining = 0;
+    }
+
+    return JSON.stringify({
+      spanish: words.join(" ").replaceAll("  ", " ").trim(),
+      parts,
+    });
+  },
+});
+
+// You can register more tools here:
+const tools = [numberToSpanishTool];
+
+// --- model ---
+const llm = new ChatGroq({
+  apiKey: API_KEY,
+  model: MODEL,
+  temperature: 0.3,
+  maxTokens: 800,
+});
+
+// --- SYSTEM prompt (kept short; your long pedagogy prompt also works) ---
 const SYSTEM = SYSTEM_RULES;
 
-function categorize(q) {
-  const s = q.toLowerCase().trim();
-  if (
-    /pronoun|nosotr|vosotr|pronouns?|subject|conjugat|tense|ser|estar/.test(s)
-  )
-    return "[GRAMMAR]";
-  if (/pronounce|how to pronounce|pronunciación|ñ|ll|rr|vowel|sound/.test(s))
-    return "[PRONUNCIATION]";
-  if (/^\d+$/.test(s) || /\bnumber\b|\bsay\b.*\d/.test(s)) return "[NUMBER]";
-  if (/break down|etymol|origin|morpholog|prefix|suffix/.test(s))
-    return "[WORD LOOKUP]";
-  if (s.split(/\s+/).length === 1) return "[WORD LOOKUP]";
-  return "[GENERAL]";
-}
+// ---- IMPORTANT: prompt MUST include agent_scratchpad ----
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", SYSTEM],
+  // optional chat history placeholder (keep if you plan to pass it)
+  new MessagesPlaceholder("chat_history"),
+  ["human", "{input}"],
+  // ⬇️ This is required for tool-using agents:
+  new MessagesPlaceholder("agent_scratchpad"),
+]);
 
-function augmentQuestion(q) {
-  const tag = categorize(q);
-  switch (tag) {
-    case "[GRAMMAR]":
-      return `${tag} Explain clearly for beginners and include tidy tables.\nQuestion: ${q}`;
-    case "[PRONUNCIATION]":
-      return `${tag} Include mouth/tongue steps and a minimal pairs table.\nQuestion: ${q}`;
-    case "[NUMBER]":
-      return `${tag} Break number into parts with a table and show how to say it.\nQuestion: ${q}`;
-    case "[WORD LOOKUP]":
-      return `${tag} Analyze the single word thoroughly with sections and a small facts table.\nWord: ${q}`;
-    default:
-      return q;
-  }
-}
+// Build agent + executor once (module scope is cached by Netlify)
+const agent = await createToolCallingAgent({
+  llm,
+  tools,
+  prompt,
+});
 
+const executor = new AgentExecutor({
+  agent,
+  tools,
+  // helpful for debugging:
+  // returnIntermediateSteps: true,
+});
+
+// ---- Netlify handler ----
 export default async (req) => {
   try {
-    if (!API_KEY) {
-      return new Response(JSON.stringify({ error: "Missing GROQ_API_KEY" }), {
-        status: 500,
+    if (req.method !== "POST") {
+      return new Response(JSON.stringify({ error: "Use POST" }), {
+        status: 405,
         headers: { "content-type": "application/json" },
       });
     }
 
-    // GET / POST support
-    let question = "";
-    if (req.method === "GET") {
-      const url = new URL(req.url);
-      question = (url.searchParams.get("q") || "").trim();
-    } else if (req.method === "POST") {
-      const body = await req.json().catch(() => ({}));
-      question = (body?.question || "").trim();
-    }
-
+    const body = await req.json().catch(() => ({}));
+    const question = (body?.question || "").trim();
     if (!question) {
       return new Response(JSON.stringify({ error: "Missing question" }), {
         status: 400,
@@ -65,48 +199,16 @@ export default async (req) => {
       });
     }
 
-    const payload = {
-      model: MODEL,
-      stream: false,
-      temperature: 0.3,
-      max_tokens: 900, // enough for tables + examples
-      messages: [
-        { role: "system", content: SYSTEM },
-        { role: "user", content: augmentQuestion(question) },
-      ],
-    };
+    // You can pass chat_history if you maintain it in session; empty for now.
+    const res = await executor.invoke({ input: question, chat_history: [] });
 
-    const r = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!r.ok) {
-      const errText = await r.text().catch(() => "");
-      return new Response(
-        JSON.stringify({ error: `Groq error: ${r.status}`, detail: errText }),
-        { status: 502, headers: { "content-type": "application/json" } }
-      );
-    }
-
-    const data = await r.json();
-    const answer =
-      data?.choices?.[0]?.message?.content?.trim() || "Sorry, no answer.";
-
-    return new Response(JSON.stringify({ answer }), {
+    return new Response(JSON.stringify({ answer: res.output || "" }), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  } catch (e) {
+  } catch (err) {
     return new Response(
-      JSON.stringify({
-        error: "Server error",
-        detail: String(e?.message || e),
-      }),
+      JSON.stringify({ error: err?.message || "Agent failed" }),
       { status: 500, headers: { "content-type": "application/json" } }
     );
   }
