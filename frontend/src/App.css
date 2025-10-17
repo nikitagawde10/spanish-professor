@@ -1,9 +1,13 @@
 :root {
   --bg: #0a0e1a;
-  --bg-gradient: linear-gradient(135deg, #0a0e1a 0%, #131829 100%);
+  --bg-gradient: linear-gradient(
+    135deg,
+    #0a0e1a 0%,
+    #131829 100%
+  ); /* kept for reference */
   --panel: #16193a;
   --panel-hover: #1a1f42;
-  --text: #f0f3ff;
+  --text: #ffffff;
   --text-secondary: #b8c1e8;
   --muted: #8892bf;
   --primary: #6b8afd;
@@ -59,7 +63,7 @@ body,
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", sans-serif;
-  background: var(--bg-gradient);
+  background: var(--bg); /* SOLID background (no two-tone) */
   color: var(--text);
   line-height: 1.6;
   transition: background 0.3s ease, color 0.3s ease;
@@ -92,12 +96,10 @@ body {
   align-items: center;
   gap: 12px;
 }
-
 .logo {
   font-size: 28px;
   line-height: 1;
 }
-
 .brand-text {
   font-weight: 700;
   font-size: 20px;
@@ -115,7 +117,6 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .theme-toggle:hover {
   background: var(--panel-hover);
   border-color: var(--primary);
@@ -154,7 +155,6 @@ body {
   color: var(--text-secondary);
   font-size: clamp(16px, 2.5vw, 20px);
   line-height: 1.7;
-  font-weight: 400;
 }
 
 /* ---------- Chips ---------- */
@@ -166,7 +166,6 @@ body {
   width: 100%;
   max-width: 820px;
 }
-
 .chip {
   border-radius: 24px;
   padding: 10px 18px;
@@ -178,7 +177,6 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .chip:hover {
   background: var(--panel-hover);
   border-color: var(--primary);
@@ -208,17 +206,14 @@ body {
   background: var(--panel);
   transition: all 0.3s ease;
 }
-
 .search-box:focus-within {
   border-color: var(--primary);
   box-shadow: 0 0 0 4px rgba(107, 138, 253, 0.1);
 }
-
 .search-icon {
   font-size: 22px;
   opacity: 0.7;
 }
-
 .search-box input {
   flex: 1;
   background: transparent;
@@ -228,7 +223,6 @@ body {
   font-size: 16px;
   font-weight: 400;
 }
-
 .search-box input::placeholder {
   color: var(--muted);
 }
@@ -237,7 +231,7 @@ body {
   border-radius: 14px;
   border: none;
   background: linear-gradient(135deg, var(--primary), var(--accent));
-  color: #ffffff;
+  color: #fff;
   font-weight: 700;
   font-size: 16px;
   padding: 16px 32px;
@@ -248,30 +242,25 @@ body {
   transition: all 0.3s ease;
   box-shadow: 0 4px 16px rgba(107, 138, 253, 0.3);
 }
-
 .ask-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(107, 138, 253, 0.4);
 }
-
 .ask-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .sparkle {
   font-size: 18px;
 }
-
 .spinner {
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
+  border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -290,24 +279,20 @@ body {
   gap: 16px;
   animation: slideIn 0.3s ease-out;
 }
-
 .alert.error {
   background: var(--error-bg);
   border-color: var(--error-border);
   color: var(--error-text);
 }
-
 .alert-icon {
   font-size: 24px;
   flex-shrink: 0;
 }
-
 .alert-content strong {
   display: block;
   font-weight: 700;
   margin-bottom: 4px;
 }
-
 .alert-content p {
   margin: 0;
   opacity: 0.9;
@@ -324,14 +309,12 @@ body {
   padding: 28px;
   animation: slideIn 0.3s ease-out;
 }
-
 .card-header {
   display: flex;
   align-items: center;
   gap: 16px;
   margin-bottom: 20px;
 }
-
 .card-badge {
   width: 48px;
   height: 48px;
@@ -343,13 +326,11 @@ body {
   font-size: 24px;
   box-shadow: 0 4px 16px rgba(107, 138, 253, 0.3);
 }
-
 .card h2 {
   font-size: 24px;
   font-weight: 700;
   color: var(--text);
 }
-
 .divider {
   border: none;
   border-top: 1px solid var(--border);
@@ -360,26 +341,13 @@ body {
   color: var(--text-secondary);
   font-size: 16px;
   line-height: 1.8;
-  white-space: pre-wrap;
+  white-space: normal;
   word-wrap: break-word;
-}
-/* ---------- Markdown body (improved) ---------- */
-.answer-content {
-  color: var(--text-secondary);
-  font-size: 16px;
-  line-height: 1.8;
-  white-space: normal; /* was pre-wrap; let Markdown wrap naturally */
-  word-wrap: break-word;
-}
-
-/* Give tables and wide content a safe scroller on small screens */
-.answer-content,
-.answer-content .md-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Base spacing for paragraphs and blocks */
+/* ---------- Markdown body (improved) ---------- */
 .markdown-body > * + * {
   margin-top: 0.85em;
 }
@@ -444,14 +412,27 @@ body {
   margin-top: 0.3em;
 }
 
-/* Horizontal rule */
+/* HR */
 .markdown-body hr {
   border: none;
   border-top: 1px dashed var(--border);
   margin: 1.25em 0;
 }
+/* Make section titles stand out a hair more */
+.markdown-body h2 {
+  margin-top: 0.6em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--border);
+}
 
-/* Blockquotes (callout style) */
+/* Keep table header visible when long sections scroll on mobile */
+.markdown-body table thead th {
+  position: sticky;
+  top: 0;
+  background: color-mix(in srgb, var(--panel) 95%, transparent);
+  z-index: 1;
+}
+/* Blockquotes */
 .markdown-body blockquote {
   margin: 1em 0;
   padding: 0.85em 1em;
@@ -467,7 +448,7 @@ body {
   margin-bottom: 0;
 }
 
-/* Inline code */
+/* Code */
 .markdown-body code {
   background: color-mix(in srgb, var(--text) 10%, transparent);
   padding: 2px 6px;
@@ -477,8 +458,6 @@ body {
   font-size: 0.95em;
   color: var(--text);
 }
-
-/* Code blocks */
 .markdown-body pre {
   background: var(--panel-hover);
   border: 1px solid var(--border);
@@ -488,7 +467,7 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 .markdown-body pre code {
-  background: transparent; /* avoid double background inside pre */
+  background: transparent;
   padding: 0;
   border-radius: 0;
   color: var(--text);
@@ -503,7 +482,7 @@ body {
   background: color-mix(in srgb, var(--panel) 92%, transparent);
   border: 1px solid var(--border);
   border-radius: 12px;
-  overflow: hidden; /* clip rounded corners */
+  overflow: hidden;
 }
 .markdown-body thead th {
   background: color-mix(in srgb, var(--primary) 10%, transparent);
@@ -524,8 +503,6 @@ body {
 .markdown-body tbody tr:last-child td {
   border-bottom: none;
 }
-
-/* Zebra rows for readability */
 .markdown-body tbody tr:nth-child(odd) {
   background: color-mix(in srgb, var(--panel-hover) 35%, transparent);
 }
@@ -539,7 +516,7 @@ body {
   box-shadow: var(--shadow);
 }
 
-/* Definition lists (for vocab) */
+/* Definition lists */
 .markdown-body dl {
   margin: 0.8em 0;
 }
@@ -552,33 +529,21 @@ body {
   color: var(--text-secondary);
 }
 
-/* Small note text */
+/* Small note */
 .markdown-body small {
   color: var(--muted);
 }
 
-/* Tighten “table inside card” on small screens */
-@media (max-width: 640px) {
-  .answer-content {
-    font-size: 15.5px;
-  }
-  .markdown-body th,
-  .markdown-body td {
-    padding: 8px 10px;
-  }
-}
 /* ---------- Skeleton ---------- */
 .skeleton-card {
   opacity: 0.8;
 }
-
 .skeleton-header {
   display: flex;
   align-items: center;
   gap: 16px;
   margin-bottom: 20px;
 }
-
 .sk {
   border-radius: 8px;
   background: linear-gradient(
@@ -590,23 +555,19 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
-
 .sk-badge {
   width: 48px;
   height: 48px;
   border-radius: 14px;
 }
-
 .sk-title {
   height: 24px;
   width: 120px;
 }
-
 .sk-line {
   height: 16px;
   margin: 12px 0;
 }
-
 .sk-line.short {
   width: 65%;
 }
@@ -619,7 +580,6 @@ body {
     background-position: -200% 0;
   }
 }
-
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -636,13 +596,11 @@ body {
   text-align: center;
   padding: 48px 24px;
 }
-
 .empty-icon {
   font-size: 64px;
   margin-bottom: 16px;
   opacity: 0.6;
 }
-
 .hint {
   color: var(--muted);
   font-size: 16px;
@@ -655,7 +613,6 @@ body {
   margin-top: auto;
   padding-top: 32px;
 }
-
 .footer small {
   font-size: 14px;
 }
@@ -665,41 +622,129 @@ body {
   .topbar {
     padding: 12px 16px;
   }
-
   .brand-text {
     font-size: 18px;
   }
-
   .shell {
     padding: 32px 16px 48px;
     gap: 24px;
   }
-
   .search-container {
     flex-direction: column;
   }
-
   .ask-btn {
     width: 100%;
     justify-content: center;
   }
-
   .card {
     padding: 20px;
   }
 }
-
 @media (max-width: 480px) {
   .chips-wrap {
     gap: 8px;
   }
-
   .chip {
     font-size: 13px;
     padding: 8px 14px;
   }
-
   .search-box {
     padding: 14px 16px;
   }
+  .answer-content {
+    font-size: 15.5px;
+  }
+  .markdown-body th,
+  .markdown-body td {
+    padding: 8px 10px;
+  }
+}
+/* === FULL-BLEED BACKGROUND / VIEWPORT FIXES === */
+html {
+  background: var(--bg); /* ensure the outside of <body> matches */
+}
+
+body {
+  min-height: 100svh; /* fill small-viewport height on mobile/tablets */
+  background: var(--bg); /* force solid, no gradient banding */
+}
+
+#root {
+  min-height: 100%;
+  background: transparent; /* don't fight the body color */
+}
+
+/* iOS safe-area insets (notch / home bar) */
+.topbar {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.shell {
+  padding-left: max(24px, env(safe-area-inset-left));
+  padding-right: max(24px, env(safe-area-inset-right));
+  padding-bottom: max(64px, env(safe-area-inset-bottom));
+}
+
+/* === TABLET POLISH (≈ 768–1024px) === */
+@media (min-width: 700px) and (max-width: 1100px) {
+  .title {
+    font-size: clamp(34px, 4.6vw, 48px);
+  }
+  .subtitle {
+    font-size: clamp(17px, 2.3vw, 19px);
+  }
+
+  .search-box {
+    padding: 18px 22px;
+    border-radius: 18px;
+  }
+  .search-box input {
+    font-size: 18px; /* better tap target size */
+  }
+
+  .ask-btn {
+    padding: 18px 30px;
+    font-size: 17px;
+    border-radius: 16px;
+  }
+
+  .card {
+    border-radius: 18px;
+    padding: 24px;
+  }
+}
+
+/* === MAKE THE WHOLE APP FEEL CENTERED AND CONSISTENT === */
+.app {
+  background: var(--bg); /* match body to remove any edge tinting */
+}
+
+.shell {
+  max-width: 940px; /* a little wider on tablet looks nicer */
+}
+
+/* tighten the card divider contrast just a bit on tablet */
+@media (min-width: 700px) and (max-width: 1100px) {
+  .divider {
+    border-top-color: color-mix(in srgb, var(--border) 85%, transparent);
+  }
+}
+
+/* === ANSWER TYPOGRAPHY: slight boost on tablet === */
+@media (min-width: 700px) and (max-width: 1100px) {
+  .answer-content {
+    font-size: 17px;
+  }
+  .markdown-body h2 {
+    font-size: clamp(22px, 2.2vw, 24px);
+  }
+  .markdown-body h3 {
+    font-size: clamp(19px, 2vw, 21px);
+  }
+}
+
+/* === LAST-RESORT: prevent any stray body margins from user agent === */
+body {
+  margin: 0 !important;
 }
