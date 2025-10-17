@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import "./app.css";
+import "./App.css";
 export default function App() {
   // --- state ---
   const [query, setQuery] = useState("");
