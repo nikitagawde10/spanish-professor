@@ -1,17 +1,11 @@
-// netlify/functions/ask.mjs
-// ESM + Node 20. A LangChain tool-calling agent using Groq (Llama-3.1-8B-Instant)
-// with three tools: conjugation table, IPA helper, and Tavily web search.
-
 import { z } from "zod";
 import { ChatGroq } from "@langchain/groq";
 import { TavilySearch } from "@langchain/tavily";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import {
-  ChatPromptTemplate,
-  MessagesPlaceholder,
-} from "@langchain/core/prompts";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createToolCallingAgent, AgentExecutor } from "langchain/agents";
-import { SYSTEM_RULES } from "./utils";
+import { SYSTEM_RULES } from "./system_rules";
+import { ENDINGS, IRREGULARS, PERSONS, REPS } from "./grammar_rules";
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Tiny helpers
@@ -20,60 +14,10 @@ function conjugateSpanish(verb, tense = "present") {
   const v = (verb || "").toLowerCase().trim();
   if (!v) return { note: "No verb provided." };
 
-  const persons = [
-    "yo",
-    "tú",
-    "él/ella/usted",
-    "nosotros/as",
-    "vosotros/as",
-    "ellos/ellas/ustedes",
-  ];
+  const persons = PERSONS;
 
   // minimal irregulars (extend as needed)
-  const irregular = {
-    ser: {
-      present: ["soy", "eres", "es", "somos", "sois", "son"],
-      preterite: ["fui", "fuiste", "fue", "fuimos", "fuisteis", "fueron"],
-    },
-    ir: {
-      present: ["voy", "vas", "va", "vamos", "vais", "van"],
-      preterite: ["fui", "fuiste", "fue", "fuimos", "fuisteis", "fueron"], // same as ser
-    },
-    estar: {
-      present: ["estoy", "estás", "está", "estamos", "estáis", "están"],
-      preterite: [
-        "estuve",
-        "estuviste",
-        "estuvo",
-        "estuvimos",
-        "estuvisteis",
-        "estuvieron",
-      ],
-    },
-    tener: {
-      present: ["tengo", "tienes", "tiene", "tenemos", "tenéis", "tienen"],
-      preterite: [
-        "tuve",
-        "tuviste",
-        "tuvo",
-        "tuvimos",
-        "tuvisteis",
-        "tuvieron",
-      ],
-    },
-    haber: {
-      present: ["he", "has", "ha/hay", "hemos", "habéis", "han"],
-      preterite: [
-        "hube",
-        "hubiste",
-        "hubo",
-        "hubimos",
-        "hubisteis",
-        "hubieron",
-      ],
-    },
-  };
-
+  const irregular = IRREGULARS;
   const t = (tense || "present").toLowerCase();
   if (irregular[v]?.[t]) {
     return {
@@ -100,18 +44,7 @@ function conjugateSpanish(verb, tense = "present") {
       note: "Only infinitives ending in -ar/-er/-ir are supported for regular patterns.",
     };
 
-  const endings = {
-    present: {
-      ar: ["o", "as", "a", "amos", "áis", "an"],
-      er: ["o", "es", "e", "emos", "éis", "en"],
-      ir: ["o", "es", "e", "imos", "ís", "en"],
-    },
-    preterite: {
-      ar: ["é", "aste", "ó", "amos", "asteis", "aron"],
-      er: ["í", "iste", "ió", "imos", "isteis", "ieron"],
-      ir: ["í", "iste", "ió", "imos", "isteis", "ieron"],
-    },
-  };
+  const endings = ENDINGS;
 
   const set = endings[t]?.[group];
   if (!set)
@@ -133,26 +66,7 @@ function spanishToIPA(word) {
     .trim();
 
   // crude grapheme mapping
-  const reps = [
-    [/ch/g, "t͡ʃ"],
-    [/ll/g, "ʝ"],
-    [/rr/g, "r"],
-    [/r(?=[bdgvlrmn])/g, "ɾ"],
-    [/r/g, "r"],
-    [/ñ/g, "ɲ"],
-    [/j/g, "x"],
-    [/gü/g, "ɡw"],
-    [/gue/g, "ɡe"],
-    [/gui/g, "ɡi"],
-    [/qu/g, "k"],
-    [/c([ei])/g, "θ$1"],
-    [/c/g, "k"],
-    [/z/g, "θ"],
-    [/v/g, "b"],
-    [/h/g, ""],
-    [/y/g, "ʝ"],
-    [/x/g, "ks"],
-  ];
+  const reps = REPS;
   for (const [re, out] of reps) w = w.replace(re, out);
 
   // vowels
